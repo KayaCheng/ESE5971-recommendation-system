@@ -89,6 +89,81 @@ Recommended quantitative thresholds for a first pass:
 - **Preferred chunk range:** roughly 600 to 1800 characters
 - **Flagged chunk outlier:** below 300 characters or above 2200 characters
 
+### Metrics to judge whether chunking is good
+Chunk quality should not be judged by chunk length alone. We should track a mix of **structural metrics**, **retrieval metrics**, and **manual review metrics**.
+
+#### A. Structural chunk metrics
+These are the fastest metrics to compute after preprocessing:
+
+- **Average chunk length** in characters and estimated tokens
+- **Chunk length distribution**: mean, median, standard deviation, min, max
+- **Percentage of chunks in target range**: for example, percent between 600 and 1800 characters
+- **Short-chunk rate**: percent of chunks below 300 characters
+- **Long-chunk rate**: percent of chunks above 2200 characters
+- **Multi-page chunk rate**: how often a chunk spans multiple pages
+- **Title-only chunk rate**: percent of chunks that contain only a heading or near-heading text
+- **Empty/near-empty chunk rate**
+
+Why these matter:
+- If too many chunks are very short, retrieval becomes noisy
+- If too many chunks are very long, one chunk may contain multiple concepts
+- If title-only chunks are too frequent, chunk boundaries may be too aggressive
+
+#### B. Semantic coherence metrics
+These metrics help us judge whether each chunk contains one main idea rather than several mixed topics:
+
+- **Heading-to-body consistency**: if a chunk starts with a heading, does the rest of the chunk stay on that topic?
+- **Topic purity**: manual judgment of whether one chunk covers one coherent concept
+- **Cross-chunk overlap rate**: how often two neighboring chunks repeat too much content
+- **Boundary break quality**: whether chunk boundaries split sentences, equations, or concept explanations in unnatural places
+
+Practical manual rubric for topic purity:
+- **Good (2)**: one clear concept or subtopic
+- **Acceptable (1)**: mostly one topic, minor spillover
+- **Poor (0)**: multiple unrelated ideas mixed together
+
+#### C. Retrieval-oriented chunk metrics
+Ultimately, chunk quality should be judged by whether it improves retrieval. The best chunking strategy is the one that helps the retriever return relevant content.
+
+Recommended retrieval metrics:
+- **Recall@k**: does the relevant chunk appear in the top-k results?
+- **Precision@k**: how many top-k retrieved chunks are actually useful?
+- **MRR**: how early does the first relevant chunk appear?
+- **nDCG@k**: does the ranking place the best chunks near the top?
+
+Interpretation:
+- If structural metrics look fine but Recall@k is low, the chunk boundaries may still be hurting retrieval
+- If long chunks improve Recall but hurt Precision, the chunk size is probably too large
+- If short chunks improve Precision but hurt Recall, the chunk size is probably too small
+
+#### D. Human evaluation metrics
+Because this is a course project, a lightweight human review is extremely valuable.
+
+For a sample of chunks, rate:
+- **Readability**: is the chunk easy to read independently?
+- **Completeness**: does it contain enough context to answer a query?
+- **Focus**: is it about one concept?
+- **Usefulness for retrieval**: if returned for a query, would it help the user?
+
+Simple 1-5 scoring:
+- 1 = very poor
+- 3 = acceptable
+- 5 = excellent
+
+#### E. My recommended core chunking scorecard
+If we want a practical dashboard for this project, I recommend tracking these five metrics first:
+
+1. **Percent of chunks in target length range**
+2. **Short-chunk rate**
+3. **Long-chunk rate**
+4. **Manual topic-purity score**
+5. **Retrieval Recall@5 / MRR on a small labeled query set**
+
+This combination is strong because:
+- the first three tell us whether the chunking is structurally reasonable
+- the fourth tells us whether the chunk content is semantically coherent
+- the fifth tells us whether chunking actually helps the downstream retrieval task
+
 ### Why preprocessing matters
 This stage is critical because the final recommendation quality depends heavily on the quality of extracted text and chunk boundaries. If chunking is poor, even a strong model will retrieve incomplete, noisy, or mixed-topic content.
 
