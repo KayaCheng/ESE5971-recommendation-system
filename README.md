@@ -87,6 +87,170 @@ Recommended quantitative thresholds for a first pass:
 Chunk quality should not be judged by chunk length alone. We should track a mix of **structural metrics**, **retrieval metrics**, and **manual review metrics**.
 
 
+## 3. Problem Formulation
+
+We frame this project as a **content recommendation and retrieval problem** for medical imaging knowledge sources.
+
+### Input
+One or more of the following:
+- A user query
+- A target topic or chapter
+- A learning objective
+- A clinical keyword or imaging concept
+
+### Output
+A ranked list of the most relevant document chunks, pages, or resources.
+
+### Core machine learning question
+Given a query or user need, **which chunk or document should be ranked highest?**
+
+This means the project can be approached as:
+- **Information retrieval**
+- **Learning-to-rank**
+- **Semantic search**
+- **Recommendation over educational content**
+
+---
+
+## 4. Model Selection Roadmap
+
+To keep the project disciplined, model selection should move from the simplest explainable baseline to stronger semantic models.
+
+### Stage 1: Non-neural lexical baseline
+**Goal:** establish the minimum viable retrieval benchmark.
+
+Candidate methods:
+- TF-IDF + cosine similarity
+- BM25 ranking
+
+Why start here:
+- Easy to implement
+- Fast to evaluate
+- Strong interpretability
+- Gives a clean benchmark for later models
+
+What this baseline tells us:
+- Whether exact keyword overlap is already enough for many queries
+- Which query types fail without semantic understanding
+
+### Stage 2: Classical supervised ranking / classification baseline
+**Goal:** test whether handcrafted features or simple supervised models improve ranking.
+
+Candidate methods:
+- Logistic Regression
+- Linear SVM
+- XGBoost or LightGBM on engineered features
+
+Possible features:
+- TF-IDF similarity
+- BM25 score
+- Query-chunk token overlap
+- Presence of title keywords
+- Chunk length
+- Section position in document
+
+Why this stage matters:
+- It helps us understand whether ranking gains come from better features rather than a more complex neural model.
+
+### Stage 3: Embedding-based semantic retrieval
+**Goal:** move beyond exact match and capture concept similarity.
+
+Candidate methods:
+- Sentence-BERT style embeddings
+- Instructor-style embeddings
+- Domain-adapted biomedical embeddings if available
+
+How it works:
+- Encode chunk text into vectors
+- Encode the query into the same vector space
+- Retrieve nearest chunks using cosine similarity or vector search
+
+Why this stage matters:
+- Medical imaging queries may use different words than the source text
+- Semantic embeddings can retrieve useful content even when exact wording differs
+
+### Stage 4: Re-ranking model
+**Goal:** improve top-k ranking quality after initial retrieval.
+
+Candidate methods:
+- Cross-encoder re-ranker
+- Small transformer-based relevance scorer
+- Learning-to-rank model using retrieved candidates
+
+Pipeline idea:
+1. Use BM25 or embeddings to get top-k candidates
+2. Use a stronger model to re-rank those candidates
+3. Return the best final recommendations
+
+### Stage 5: Full recommendation system extension
+After retrieval quality is acceptable, the system can be extended to include:
+- User profile personalization
+- Topic progression recommendations
+- Resource diversity constraints
+- Multimodal recommendations from PDF, web, and video content
+
+---
+
+## 5. Baseline Model Ideas
+
+Here are the baseline models I recommend, in order of importance.
+
+### Baseline 1: BM25 retrieval baseline
+**My strongest recommendation for the first baseline.**
+
+Why BM25 should be the main baseline:
+- It is a standard retrieval benchmark
+- It works well on chunked text documents
+- It is simple, explainable, and easy to debug
+- It gives a very strong non-neural reference point
+- If a more advanced model cannot beat BM25, then the added complexity is not justified
+
+**Use case:**
+- Input: a query such as “what is convolution in imaging?”
+- Output: rank all chunks by BM25 score and return the top-k chunks
+
+**What to evaluate:**
+- Precision@k
+- Recall@k
+- Mean Reciprocal Rank (MRR)
+- Qualitative relevance of top returned chunks
+
+### Baseline 2: TF-IDF + cosine similarity
+This is the simplest baseline and should be used as a sanity check.
+
+Why include it:
+- Very easy to build
+- Useful for debugging preprocessing and tokenization
+- Helps compare vector-space lexical matching vs probabilistic lexical ranking (BM25)
+
+Expectation:
+- Likely weaker than BM25, but still useful as a very transparent baseline
+
+### Baseline 3: Embedding retrieval baseline
+This should be the **first semantic baseline** after lexical methods.
+
+Recommended setup:
+- Chunk the documents
+- Build embeddings for each chunk
+- Use cosine similarity to retrieve top-k candidates
+
+Why it matters:
+- It will show whether semantic similarity adds value beyond keyword matching
+- It becomes the bridge to a more advanced recommendation pipeline
+
+### Baseline 4: Hybrid baseline
+A very practical project baseline is a **hybrid retriever**:
+- BM25 score
+- Embedding similarity score
+- Weighted combination of both
+
+Why I like this idea:
+- Medical queries often benefit from both exact terminology and semantic similarity
+- Hybrid retrieval is often more robust than either method alone
+- It is still much simpler than training a large end-to-end neural ranking model
+
+---
+
 ESE5971-recommendation-system/
 ├── README.md
 ├── requirements.txt
