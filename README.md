@@ -265,3 +265,94 @@ ESE5971-recommendation-system/
 │   └── utils/
 ├── notebooks/
 └── tests/
+
+Phase 2:
+Stage A: Vector Storage (Embedding + local index)
+ - input:
+   - chunks_jsonl: data/processed/chunks/mis1to66_chunks.jsonl
+ - config:
+   - embedding_model_name
+   - embedding_dim
+   - batch_size
+ - output:
+   - storage/vector/index.faiss
+   - storage/vector/metadata.sqlite
+   - storage/vector/id_map.json
+
+Stage B: Concept Extraction (LLM schema extraction + preparation for knowledge graph)
+- input:
+   - metadata.sqlite (or chunks_jsonl)
+ config:
+   llm_model_name
+   extraction_schema
+ output:
+   storage/graph/concepts.jsonl
+   storage/graph/relations.jsonl
+   storage/graph/extraction_log.jsonl
+
+
+### Process
+```bash
+# 0) Project base
+cd "../ESE Practiculum/code/ESE5971-recommendation-system"
+
+# 1) Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 2) Update pip and install dependencies
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+# 3) Run “Without OpenAI” heuristic process
+python3 scripts/build_vector_store.py \
+  --chunks-path data/processed/chunks/mis1to66_chunks.jsonl \
+  --output-dir storage/vector \
+  --embedding-backend hash \
+  --embedding-model hash-v1 \
+  --embedding-dim 384
+
+python3 scripts/extract_concepts.py \
+  --chunks-path data/processed/chunks/mis1to66_chunks.jsonl \
+  --output-dir storage/graph \
+  --backend heuristic \
+  --min-confidence 0.6
+
+# 4) Check if output files exist
+find storage -maxdepth 3 -type f | sort
+
+# 5) Quick check output results
+python3 - <<'PY'
+import json, pathlib
+p = pathlib.Path("storage/vector/manifest.json")
+print("vector manifest exists:", p.exists())
+if p.exists():
+    print(json.loads(p.read_text())["num_chunks"])
+
+p = pathlib.Path("storage/graph/manifest.json")
+print("graph manifest exists:", p.exists())
+if p.exists():
+    m = json.loads(p.read_text())
+    print("chunks_processed:", m["chunks_processed"], "concepts_total:", m["concepts_total"], "relations_total:", m["relations_total"])
+PY
+
+# 6) （Optional）If OpenAI token exists then run the real model
+export OPENAI_API_KEY="sk-xxxx"
+
+python3 scripts/build_vector_store.py \
+  --chunks-path data/processed/chunks/mis1to66_chunks.jsonl \
+  --output-dir storage/vector_openai \
+  --embedding-backend openai \
+  --embedding-model text-embedding-3-small \
+  --embedding-dim 1536
+
+python3 scripts/extract_concepts.py \
+  --chunks-path data/processed/chunks/mis1to66_chunks.jsonl \
+  --output-dir storage/graph_openai \
+  --backend openai \
+  --llm-model gpt-4.1-mini \
+  --min-confidence 0.6
+
+# 7) Check OpenAI mode output
+find storage/vector_openai storage/graph_openai -maxdepth 2 -type f | sort
+```

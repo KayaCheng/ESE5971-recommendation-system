@@ -1,0 +1,13 @@
+{
+  "created_at": "2026-03-23T21:19:16+00:00",
+  "chunks_path": "data/processed/chunks/mis1to66_chunks.jsonl",
+  "num_chunks": 55,
+  "embedding_backend": "hash",
+  "embedding_model": "hash-v1",
+  "embedding_dim": 384,
+  "recomputed_embeddings": 0,
+  "skipped_embeddings": 55,
+  "index_file": "storage/vector/index.npy",
+  "id_map_file": "storage/vector/id_map.json",
+  "metadata_db": "storage/vector/metadata.sqlite"
+}
