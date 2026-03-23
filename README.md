@@ -1,3 +1,5 @@
+### GitHub repo link: https://github.com/KayaCheng/ESE5971-recommendation-system/tree/main
+
 ## 1. Introduction
 
 ### Decisions to be impacted
