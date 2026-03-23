@@ -217,80 +217,6 @@ Why BM25 should be the main baseline:
 - Mean Reciprocal Rank (MRR)
 - Qualitative relevance of top returned chunks
 
-### Baseline 2: TF-IDF + cosine similarity
-This is the simplest baseline and should be used as a sanity check.
-
-Why include it:
-- Very easy to build
-- Useful for debugging preprocessing and tokenization
-- Helps compare vector-space lexical matching vs probabilistic lexical ranking (BM25)
-
-Expectation:
-- Likely weaker than BM25, but still useful as a very transparent baseline
-
-### Baseline 3: Embedding retrieval baseline
-This should be the **first semantic baseline** after lexical methods.
-
-Recommended setup:
-- Chunk the documents
-- Build embeddings for each chunk
-- Use cosine similarity to retrieve top-k candidates
-
-Why it matters:
-- It will show whether semantic similarity adds value beyond keyword matching
-- It becomes the bridge to a more advanced recommendation pipeline
-
-### Baseline 4: Hybrid baseline
-A very practical project baseline is a **hybrid retriever**:
-- BM25 score
-- Embedding similarity score
-- Weighted combination of both
-
-
-
-ESE5971-recommendation-system/
-├── README.md
-├── requirements.txt
-├── data/
-│   ├── raw/
-│   │   ├── pdf/
-│   │   ├── video/
-│   │   └── web/
-│   └── processed/
-│       ├── cleaned/
-│       └── chunks/
-├── src/
-│   ├── pdf_processing/
-│   ├── video_processing/
-│   ├── web_processing/
-│   ├── chunking/
-│   └── utils/
-├── notebooks/
-└── tests/
-
-Phase 2:
-Stage A: Vector Storage (Embedding + local index)
- - input:
-   - chunks_jsonl: data/processed/chunks/mis1to66_chunks.jsonl
- - config:
-   - embedding_model_name
-   - embedding_dim
-   - batch_size
- - output:
-   - storage/vector/index.faiss
-   - storage/vector/metadata.sqlite
-   - storage/vector/id_map.json
-
-Stage B: Concept Extraction (LLM schema extraction + preparation for knowledge graph)
-- input:
-   - metadata.sqlite (or chunks_jsonl)
- config:
-   llm_model_name
-   extraction_schema
- output:
-   storage/graph/concepts.jsonl
-   storage/graph/relations.jsonl
-   storage/graph/extraction_log.jsonl
 
 
 ### Process
@@ -358,3 +284,481 @@ python3 scripts/extract_concepts.py \
 # 7) Check OpenAI mode output
 find storage/vector_openai storage/graph_openai -maxdepth 2 -type f | sort
 ```
+
+
+## 10. Where to Start Next for a RAG Recommendation System
+
+If the next phase of the project is to build a **RAG-based recommendation system**, we should start from the simplest end-to-end pipeline and then improve it step by step.
+
+### Step 1: Freeze the chunking pipeline and create a stable corpus
+Before building RAG, we need a stable document collection.
+
+Immediate tasks:
+- Run the PDF pipeline end to end
+- Save the cleaned page-level JSONL
+- Save the chunk-level JSONL
+- Inspect chunk quality using the chunk metrics above
+- Finalize a first chunking configuration before indexing
+
+Why this is first:
+- RAG quality depends directly on the quality of the chunks
+- If chunk boundaries change every day, retrieval evaluation becomes unreliable
+
+### Step 2: Build the first retriever
+The retriever is the most important component in an early RAG system.
+
+Recommended order:
+1. **BM25 retriever** as the first baseline
+2. **Embedding retriever** as the first semantic retriever
+3. **Hybrid retriever** combining BM25 and embeddings
+
+Suggested implementation idea:
+- Input: user query
+- Retrieve: top-k chunks from the indexed corpus
+- Output: ranked chunk candidates for generation or recommendation
+
+Why start here:
+- In RAG, poor retrieval usually hurts the system more than weak generation
+- A strong retriever gives us a usable system even before adding an LLM
+
+### Step 3: Define what “recommendation” means in the RAG setting
+For this project, recommendation should be defined explicitly. We have at least three possible recommendation targets:
+
+#### Option A: Recommend relevant chunks
+Given a query, return the most relevant text chunks.
+
+Use when:
+- the goal is search and knowledge support
+- we want the simplest RAG prototype
+
+#### Option B: Recommend source documents or chapters
+Given a query, aggregate chunk scores and recommend the best pages, sections, or source documents.
+
+Use when:
+- the user wants a full chapter, source, or reading recommendation
+
+#### Option C: Recommend learning paths or related topics
+Given a topic, recommend what the user should read next.
+
+Use when:
+- the project wants a more educational recommender flavor
+- we want topic progression rather than only retrieval
+
+**My recommendation:** start with **Option A (chunk recommendation)** first, then extend to **Option B (document recommendation)** after retrieval works well.
+
+### Step 4: Add the generator only after retrieval is working
+Once retrieval is stable, then add the generation layer.
+
+Basic RAG flow:
+1. User submits a query
+2. Retriever gets top-k chunks
+3. Prompt builder combines the query and retrieved chunks
+4. LLM generates:
+   - an answer
+   - a recommended reading list
+   - or a justification for why those chunks were selected
+
+What the generator should do in our project:
+- Summarize the retrieved content
+- Explain why a chunk or document is relevant
+- Turn retrieval results into a more user-friendly recommendation response
+
+### Step 5: Add recommendation-specific ranking logic
+A RAG pipeline becomes a recommendation system when we go beyond plain retrieval and add ranking logic that reflects user needs.
+
+Possible ranking signals:
+- Retrieval score
+- Source quality or chapter importance
+- Topic coverage and diversity
+- Difficulty level
+- User history or interest profile
+- Novelty versus redundancy
+
+Example:
+- Query: “I want to study convolution in imaging”
+- Retrieval gets relevant chunks
+- Recommendation layer reorders them into:
+  1. introductory explanation
+  2. mathematical definition
+  3. applications in imaging
+  4. follow-up topic: correlation vs convolution
+
+This is where the system becomes more than search.
+
+### Step 6: Build a small evaluation set before scaling
+Before building a complex RAG system, create a small but high-quality evaluation benchmark.
+
+Recommended evaluation units:
+- **Retrieval evaluation**: are the right chunks retrieved?
+- **Recommendation evaluation**: are the recommended chunks/documents actually useful?
+- **Generation evaluation**: is the final answer grounded in retrieved evidence?
+
+Minimum benchmark suggestion:
+- 20 to 30 representative medical imaging queries
+- manually labeled relevant chunks
+- optional relevance grades: highly relevant / somewhat relevant / irrelevant
+
+### Step 7: Start with a minimal system architecture
+The first version does not need to be complicated.
+
+Recommended MVP architecture:
+
+1. **Ingestion layer**
+   - PDF extraction
+   - cleaning
+   - chunking
+
+2. **Indexing layer**
+   - BM25 index
+   - vector index for embeddings
+
+3. **Retrieval layer**
+   - top-k lexical retrieval
+   - top-k semantic retrieval
+   - optional hybrid score fusion
+
+4. **Generation / recommendation layer**
+   - prompt template
+   - LLM response
+   - recommendation explanation
+
+5. **Evaluation layer**
+   - query set
+   - retrieval metrics
+   - manual review
+
+### Step 8: Concrete implementation order for the next 2 to 3 weeks
+
+#### Week 1: Make retrieval work
+- Finalize chunk output
+- Build BM25 index over chunk text
+- Build a query interface
+- Return top-5 chunks for each query
+- Create 10 to 20 manual test queries
+
+#### Week 2: Add semantic retrieval
+- Generate embeddings for each chunk
+- Build a vector index
+- Compare BM25 vs embedding retrieval
+- Analyze failure cases
+
+#### Week 3: Build the first RAG prototype
+- Feed top-k retrieved chunks into an LLM prompt
+- Generate answer + recommended reading chunks
+- Add citation of chunk IDs or page numbers
+- Evaluate grounding quality
+
+### Step 9: My recommended starting point
+If you ask me what to do **right now**, I would start with these three tasks:
+
+1. **Create a fixed chunk dataset**
+2. **Implement BM25 retrieval over chunks**
+3. **Build a tiny labeled query set for evaluation**
+
+Reason:
+- this gives us the first working retrieval backbone
+- it matches the current state of the repository
+- it is the cleanest foundation for a later RAG system
+
+### Step 10: Best first RAG deliverable
+The best first deliverable is not a fancy chatbot. It is:
+
+> **A system that takes a medical imaging query, retrieves the top relevant chunks, and returns a short evidence-grounded recommendation with source references.**
+
+That deliverable is realistic, demonstrable, and easy to evaluate.
+
+---
+
+## 11. Current Status
+
+At the current stage, the strongest implemented part of the project is the **PDF preprocessing pipeline**, which extracts text, cleans pages, and creates structured chunks. The next major milestone should be building and evaluating the first retrieval baseline, then turning that retriever into the backbone of a **RAG-based recommendation system**, with **BM25 as the official first baseline** and **hybrid retrieval as the strongest practical early-system direction**.
+
+---
+
+## 12. Updated System Roadmap: Vector Store + Knowledge Graph + Bandit Recommendation
+
+Our updated direction is no longer just “retrieve the most relevant chunks.”  
+The new goal is to build a **dual-memory recommendation system**:
+
+- a **vector database** for semantic retrieval of chunk content
+- a **knowledge graph** for concept structure and learning dependencies
+- a **bandit-based recommendation layer** for selecting the best next concept or content for a user
+
+In this setup, the JSONL chunk output is the starting point, not the final product.
+
+### Stage 1: Vector Storage for Semantic Search
+
+The first task is to turn each chunk into an embedding and store it in a vector database.
+
+#### Input
+- chunk-level JSONL produced by the preprocessing pipeline
+- each record should include at least:
+  - `chunk_id`
+  - `source_name`
+  - `chunk_text`
+
+#### Process
+1. Read the JSONL file line by line
+2. Feed `chunk_text` into an embedding model
+3. Store the embedding in a vector database such as **Qdrant** or **Milvus**
+4. Save metadata together with the vector
+
+#### Required metadata / payload
+When inserting vectors, the payload should include:
+- `chunk_id`
+- `source_name`
+- `page_start`
+- `page_end`
+- optional future fields such as:
+  - `concepts`
+  - `difficulty`
+  - `section_title`
+
+#### Recommended embedding model
+For the first implementation, a strong default choice is:
+- **BGE-m3**
+
+Why:
+- good multilingual and retrieval performance
+- suitable for semantic search
+- strong practical baseline for chunk-level embedding
+
+#### Why this stage matters
+This stage solves the **semantic retrieval** problem:
+- users will be able to search by meaning, not only by exact keyword match
+- retrieved chunks can later be used as recommendation candidates or LLM context
+
+### Stage 2: Concept Extraction for Knowledge-Graph Nodes
+
+The second task is to “dehydrate” each chunk into a smaller set of educational concepts.
+
+#### Goal
+Transform chunk text into structured knowledge units such as:
+- concepts
+- algorithms
+- modalities
+- prerequisites
+- difficulty level
+
+#### Process
+1. Send each chunk to an LLM
+2. Use a fixed output schema
+3. Extract concept-level entities from the chunk
+4. Store the extracted concepts together with the originating `chunk_id`
+
+#### Example extraction target
+If a chunk explains Fourier Transform in CT, the model could output structured information such as:
+
+```json
+{
+  "concept": "Fourier Transform",
+  "algorithm": "Filtered Back Projection",
+  "difficulty": 4,
+  "mentioned_in_chunk": "mis1to66_chunk_0012"
+}
+```
+
+#### Recommended implementation choice
+- LLM for extraction: **GPT-4o**
+- Output format: strict JSON
+- Extraction style: schema-guided prompting
+
+#### Why this stage matters
+This stage prepares the **nodes** of the graph database.  
+Instead of storing only raw text, we begin storing explicit knowledge units that can support sequencing, prerequisite reasoning, and personalized recommendation.
+
+### Stage 3: Relationship Discovery for Graph Edges
+
+The third task is to discover logical relations between concepts.
+
+#### Goal
+Build the “edges” of the knowledge graph, especially educational relationships such as:
+- `PREREQUISITE_OF`
+- `PART_OF`
+- `USED_IN`
+- `EXTENDS`
+- `RELATED_TO`
+
+#### Example
+If one chunk explains that Radon Transform is a foundation for CT reconstruction, we should create:
+
+```text
+(Radon Transform) -[:PREREQUISITE_OF]-> (CT Reconstruction)
+```
+
+If a chunk explains that Filtered Back Projection is part of Image Reconstruction, we should create:
+
+```text
+(Filtered Back Projection) -[:PART_OF]-> (Image Reconstruction)
+```
+
+#### How to discover relationships
+Two practical options:
+
+1. **LLM-based extraction**
+   - ask the model to infer concept relationships from chunk text
+   - best for nuanced educational logic
+
+2. **Heuristic / rule-based extraction**
+   - use phrase patterns such as:
+     - “is the basis of”
+     - “is part of”
+     - “is used in”
+   - useful for bootstrapping and validation
+
+#### Why this stage matters
+This stage gives us the **learning structure** of the domain:
+- what should be learned first
+- what belongs to a larger topic
+- which concepts are adjacent in a learning path
+
+### Stage 4: The Bridge Between Vector Store and Graph Database
+
+This is the most important system-level connection in the new architecture.
+
+We do not want the vector store and graph store to exist as separate silos.  
+They must be linked in both directions.
+
+#### In the graph database
+Each concept node should contain a field such as:
+
+- `mentioned_in_chunks: [chunk_id_1, chunk_id_2, ...]`
+
+This tells us which text chunks support the concept.
+
+#### In the vector database
+Each chunk payload should store concept-level metadata such as:
+
+- `concepts`
+- `difficulty`
+- `chapter`
+
+This tells us which concepts are discussed in that chunk.
+
+#### Recommended graph database
+- **Neo4j**
+
+#### Why this bridge matters
+This bridge enables two-way reasoning:
+
+- **From graph to content**
+  - find a concept in the graph
+  - get its supporting chunk IDs
+  - retrieve the actual text from the vector store
+
+- **From content to graph**
+  - retrieve semantically relevant chunks
+  - inspect which concepts they mention
+  - reason over concept-level structure and prerequisites
+
+This is the core integration that makes the system more than a normal RAG pipeline.
+
+### Stage 5: Final Post-Processing State
+
+After these steps, the system should have two aligned knowledge layers.
+
+#### Vector database
+Contains:
+- embeddings for every chunk
+- metadata such as chunk ID, source, page range, and concepts
+- support for semantic retrieval
+
+#### Graph database
+Contains:
+- concept nodes
+- algorithm nodes
+- difficulty or topic metadata
+- prerequisite and part-of relations
+- references back to chunk IDs
+
+#### Intuition
+At that point, the project will look like this:
+
+- the vector database stores the **meaning of each chunk**
+- the graph database stores the **logic of the domain**
+
+For example, the graph may encode a sequence like:
+
+```text
+Signal Processing -> Fourier Transform -> Projection Theorem -> CT Reconstruction
+```
+
+This is exactly what we need for educational recommendation and adaptive sequencing.
+
+### Stage 6: How This Supports Online Bandit Training
+
+This new architecture is especially useful for online recommendation models such as **LinUCB**.
+
+#### State
+The system state can be built from:
+- concepts the user has already studied
+- graph neighbors of those concepts
+- user difficulty level
+- recent interaction history
+
+#### Action
+An action can be:
+- recommending the next concept
+- recommending the next chunk
+- recommending the next reading path
+
+A natural action set can be generated from:
+- neighboring graph nodes
+- prerequisite graph edges
+- semantically similar chunks in the vector database
+
+#### Content retrieval
+Once the bandit chooses the next concept or concept-neighbor:
+1. look up the concept in the graph
+2. get the associated `chunk_id` list
+3. retrieve the relevant chunk content from the vector database
+4. return the content to the user
+
+#### Why this matters
+This means the bandit is not choosing from random content.  
+It is choosing from a structured candidate set grounded in:
+- concept dependencies
+- semantic relevance
+- user learning state
+
+### Stage 7: Recommended Immediate Implementation Order
+
+To make this roadmap actionable, I recommend the following order:
+
+#### Phase A: Finish vector storage first
+- read chunk JSONL
+- embed `chunk_text`
+- store vectors in Qdrant or Milvus
+- save metadata payload for each chunk
+
+#### Phase B: Extract concepts
+- design the concept extraction schema
+- run GPT-4o over chunks
+- save concept JSON outputs
+- keep `chunk_id` as the provenance key
+
+#### Phase C: Build the graph
+- create Neo4j nodes for concepts
+- create edges such as `PREREQUISITE_OF` and `PART_OF`
+- attach `mentioned_in_chunks`
+
+#### Phase D: Build the bridge
+- write concept names into vector-store metadata
+- write chunk references into graph nodes
+
+#### Phase E: Add recommendation logic
+- use graph neighbors as candidate next concepts
+- use the vector store to retrieve actual chunk content
+- optionally add LinUCB or another contextual bandit for online learning
+
+### Stage 8: Best First Deliverable Under the New Plan
+
+The best first deliverable is:
+
+> **A prototype that stores chunk embeddings in a vector database, extracts concepts into Neo4j, links concepts back to chunk IDs, and returns concept-grounded recommended reading chunks for a user query.**
+
+This deliverable is strong because it already demonstrates:
+- semantic retrieval
+- structured knowledge extraction
+- graph-based learning dependencies
+- a clear path to personalized bandit recommendation
