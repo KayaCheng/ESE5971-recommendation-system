@@ -244,12 +244,7 @@ A very practical project baseline is a **hybrid retriever**:
 - Embedding similarity score
 - Weighted combination of both
 
-Why I like this idea:
-- Medical queries often benefit from both exact terminology and semantic similarity
-- Hybrid retrieval is often more robust than either method alone
-- It is still much simpler than training a large end-to-end neural ranking model
 
----
 
 ESE5971-recommendation-system/
 ├── README.md
