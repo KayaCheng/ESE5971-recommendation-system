@@ -185,3 +185,41 @@ python3 scripts/hybrid_retrieve.py \
   - `sentence_transformers` for local pretrained models, or
   - `openai` for API embeddings.
 - Hybrid retrieval requires embedding settings that match the built index.
+
+## 7) Online Bandit Training (Replay -> Train -> Evaluate)
+
+### Step A: Generate replay log with propensity + reward
+
+```bash
+python3 scripts/bandit_simulate_replay.py \
+  --vector-dir storage/vector \
+  --events-out storage/bandit/events.jsonl \
+  --rounds 200 \
+  --top-k 10 \
+  --policy retrieval_epsilon \
+  --epsilon 0.2
+```
+
+### Step B: Train LinUCB online from event stream
+
+```bash
+python3 scripts/bandit_train_online.py \
+  --events-path storage/bandit/events.jsonl \
+  --model-path storage/bandit/model_linucb.json \
+  --reset
+```
+
+### Step C: Offline baseline comparison (IPS/SNIPS/DR)
+
+```bash
+python3 scripts/bandit_eval_offline.py \
+  --events-path storage/bandit/events.jsonl \
+  --model-path storage/bandit/model_linucb.json \
+  --output-json storage/bandit/offline_eval_report.json
+```
+
+### Outputs
+
+- `storage/bandit/events.jsonl`
+- `storage/bandit/model_linucb.json`
+- `storage/bandit/offline_eval_report.json`
