@@ -1,0 +1,619 @@
+{
+  "created_at": "2026-03-25T20:50:31+00:00",
+  "query": "How does CT differ from MRI?",
+  "vector_dir": "storage/vector",
+  "graph_dir": "storage/graph",
+  "embedding_backend": "hash",
+  "embedding_model": "hash-v1",
+  "index_embedding_model": "hash-v1",
+  "index_embedding_dim": 384,
+  "config": {
+    "seed_top_k": 20,
+    "max_concepts": 8,
+    "max_support_chunks": 3,
+    "expand_hops": 2,
+    "relation_decay": 0.45
+  },
+  "seed_chunks": [
+    {
+      "rank": 1,
+      "chunk_id": "mis1to66_chunk_0029",
+      "vector_score": 0.12587064504623413,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::filter",
+        "method::fourier_transform",
+        "modality::ct",
+        "signal::signal"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 40,
+      "page_end": 40,
+      "char_count": 1986,
+      "token_estimate": 496,
+      "chunk_preview": "2 System Theory 1.0 0.5 0.0 0.5 1.0 1.5 2.0 2.5 Input signal f(t) High-passed g2(t) Low-passed g1(t) Figure 2.11: Sine signal with additive noise after processing with a low-pass filter and a high-pass filter. example, w"
+    },
+    {
+      "rank": 2,
+      "chunk_id": "mis1to66_chunk_0053",
+      "vector_score": 0.1033882275223732,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 64,
+      "page_end": 64,
+      "char_count": 1693,
+      "token_estimate": 423,
+      "chunk_preview": "4.3 Assistance Systems Figure 4.2: Illustrations of a cholecystectomy. The left image shows an open surgery with direct access and the right image shows a minimally invasive approach with endoscopic tools (Courtesy of Pr"
+    },
+    {
+      "rank": 3,
+      "chunk_id": "mis1to66_chunk_0035",
+      "vector_score": 0.09421267360448837,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 46,
+      "page_end": 46,
+      "char_count": 1830,
+      "token_estimate": 457,
+      "chunk_preview": "3 Image Processing (a) First derivative in x-direction (b) First derivative in y-direction (c) Second derivative in x-direction Figure 3.5: Derivatives of an image. The image intensities are normalized for better visuali"
+    },
+    {
+      "rank": 4,
+      "chunk_id": "mis1to66_chunk_0033",
+      "vector_score": 0.08131705224514008,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 44,
+      "page_end": 44,
+      "char_count": 1408,
+      "token_estimate": 352,
+      "chunk_preview": "3 Image Processing (a) γ = 0.5 (b) Original image (c) γ = 2 Figure 3.3: Gamma correction 3.2.2 Gamma Correction A common choice for g is the use of a power-law, i. e., g(f) = A · f γ (The constant A is used for normalizi"
+    },
+    {
+      "rank": 5,
+      "chunk_id": "mis1to66_chunk_0022",
+      "vector_score": 0.07391863316297531,
+      "concepts": [
+        "concept::medical_imaging",
+        "method::fourier_transform",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 33,
+      "page_end": 33,
+      "char_count": 1006,
+      "token_estimate": 251,
+      "chunk_preview": "2.3 Fourier Transform Geek Box 2.12: Discrete Fourier Transform as Matrix A discrete Fourier transform can be rewritten as a complex matrix product. To demonstrate this, we start with the definition of the dis-crete Four"
+    },
+    {
+      "rank": 6,
+      "chunk_id": "mis1to66_chunk_0049",
+      "vector_score": 0.06563303619623184,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 60,
+      "page_end": 60,
+      "char_count": 1787,
+      "token_estimate": 446,
+      "chunk_preview": "Chapter 4 Endoscopy Authors: Sven Haase and Andreas Maier 4.1 Minimally Invasive Surgery and Open Surgery . . . . . . . . . . . . . 4.2 Minimally Invasive Abdominal Surgery . . . . . . . . . . . . . . . . . . . . 4.3 Ass"
+    },
+    {
+      "rank": 7,
+      "chunk_id": "mis1to66_chunk_0041",
+      "vector_score": 0.06169659271836281,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::convolution",
+        "method::filter",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 52,
+      "page_end": 52,
+      "char_count": 1577,
+      "token_estimate": 394,
+      "chunk_preview": "3 Image Processing (a) Image corrupted by salt-and-pepper noise. (b) Median filtered image (3 × 3 kernel). Figure 3.12: Example for using a median filter to reduce salt-and-pepper noise in an image. is the value that is "
+    },
+    {
+      "rank": 8,
+      "chunk_id": "mis1to66_chunk_0040",
+      "vector_score": 0.061598412692546844,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::filter",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 51,
+      "page_end": 51,
+      "char_count": 1166,
+      "token_estimate": 291,
+      "chunk_preview": "3.4 Image Filtering −1 −1 −1 (a) Prewitt kernel −1 −2 −1 (b) Sobel kernel (c) Sobel Lena Figure 3.10: Prewitt and Sobel input sorted Figure 3.11: Calculating the median (red circle) of an array. The array is first sorted"
+    },
+    {
+      "rank": 9,
+      "chunk_id": "mis1to66_chunk_0015",
+      "vector_score": 0.057066239416599274,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::convolution",
+        "method::filter",
+        "method::fourier_transform",
+        "modality::ct",
+        "signal::signal"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 26,
+      "page_end": 26,
+      "char_count": 2164,
+      "token_estimate": 541,
+      "chunk_preview": "2 System Theory 2.2.3 Correlation Another basic operation to combine a signal and a system is correlation g(t) = (h ⋆f)(t) = Z ∞ −∞ h∗(τ)f(t + τ) dτ, (2.13) where h∗is the complex conjugate of h. The main difference to c"
+    },
+    {
+      "rank": 10,
+      "chunk_id": "mis1to66_chunk_0042",
+      "vector_score": 0.05032448098063469,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 53,
+      "page_end": 53,
+      "char_count": 1722,
+      "token_estimate": 430,
+      "chunk_preview": "3.5 Morphological Operators (a) Block (b) Cross (c) Diamond (d) Bar (e) L-shaped Figure 3.13: Example structuring elements, foreground pixels are dark green, background pixels white. The center is marked by a white circl"
+    },
+    {
+      "rank": 11,
+      "chunk_id": "mis1to66_chunk_0034",
+      "vector_score": 0.04845380783081055,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 45,
+      "page_end": 45,
+      "char_count": 1192,
+      "token_estimate": 298,
+      "chunk_preview": "3.3 Edge Detection (a) Input image. 64 128 192 0.005 0.010 Intensity ni (b) Normalized histogram of the input image. Note the large empty areas for high and low intensity val-ues. 64 128 192 0.5 Intensity cdf(i) (c) CDF "
+    },
+    {
+      "rank": 12,
+      "chunk_id": "mis1to66_chunk_0037",
+      "vector_score": 0.048071227967739105,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::convolution",
+        "method::filter",
+        "method::fourier_transform"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 48,
+      "page_end": 48,
+      "char_count": 1681,
+      "token_estimate": 420,
+      "chunk_preview": "3 Image Processing −1 (a) Central dif-ference −1 (b) Forward dif-ference −1 (c) Backward difference −2 (d) Second order Figure 3.7: The derivative filters corresponding to the finite differences in-troduced in Sec. 3.3. "
+    },
+    {
+      "rank": 13,
+      "chunk_id": "mis1to66_chunk_0045",
+      "vector_score": 0.04273013770580292,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 56,
+      "page_end": 56,
+      "char_count": 1698,
+      "token_estimate": 424,
+      "chunk_preview": "3 Image Processing (a) Input image with the structuring element over-laid for the dilation. (b) Dilated image with structuring element over-laid for the erosion. (c) Closed image after eroding the dilated image. Figure 3"
+    },
+    {
+      "rank": 14,
+      "chunk_id": "mis1to66_chunk_0047",
+      "vector_score": 0.03690636530518532,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 58,
+      "page_end": 58,
+      "char_count": 1646,
+      "token_estimate": 411,
+      "chunk_preview": "3 Image Processing Bimodal Histograms – Intersection of Gaussians In many cases the histogram of an image where foreground and background should be separated is bimodal. The assumption here is that the foreground and bac"
+    },
+    {
+      "rank": 15,
+      "chunk_id": "mis1to66_chunk_0025",
+      "vector_score": 0.03384418785572052,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::convolution",
+        "method::fourier_transform",
+        "modality::ct",
+        "signal::signal"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 36,
+      "page_end": 36,
+      "char_count": 2322,
+      "token_estimate": 580,
+      "chunk_preview": "2 System Theory time signal is defined. This can be modeled by a convolution with an impulse train, see Fig. 2.6(a). At first glance, it looks like a lot of information is discarded in the process of sampling. However, u"
+    },
+    {
+      "rank": 16,
+      "chunk_id": "mis1to66_chunk_0006",
+      "vector_score": 0.031084420159459114,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::convolution",
+        "method::fourier_transform",
+        "signal::signal"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 17,
+      "page_end": 17,
+      "char_count": 1627,
+      "token_estimate": 406,
+      "chunk_preview": "Chapter 2 System Theory Authors: Peter Fischer, Klaus Sembritzki, and Andreas Maier 2.1 Signals and Systems . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2.2 Convolution and Correlation . . . . "
+    },
+    {
+      "rank": 17,
+      "chunk_id": "mis1to66_chunk_0005",
+      "vector_score": 0.027731113135814667,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "modality::computed_tomography",
+        "modality::ct",
+        "modality::oct",
+        "modality::ultrasound",
+        "modality::x_ray"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 16,
+      "page_end": 16,
+      "char_count": 2152,
+      "token_estimate": 538,
+      "chunk_preview": "1 Introduction Figure 1.6: A typical ultrasound system as it can be found in clinics world-wide. Image courtesy of Siemens Healthineers AG. sion tomography enables us to see anomalies in sugar consumption within the body"
+    },
+    {
+      "rank": 18,
+      "chunk_id": "mis1to66_chunk_0052",
+      "vector_score": 0.027576569467782974,
+      "concepts": [
+        "concept::medical_imaging",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 63,
+      "page_end": 63,
+      "char_count": 1132,
+      "token_estimate": 283,
+      "chunk_preview": "4 Endoscopy Geek Box 4.2: Mathematical Projection Models f x z xWC Orthographic Weak perspective Perspective ix In order to describe camera projections in math, we employ linear algebra and matrix calculus. The figure ab"
+    },
+    {
+      "rank": 19,
+      "chunk_id": "mis1to66_chunk_0039",
+      "vector_score": 0.02696005254983902,
+      "concepts": [
+        "concept::image",
+        "concept::medical_imaging",
+        "method::filter",
+        "modality::ct"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 50,
+      "page_end": 50,
+      "char_count": 940,
+      "token_estimate": 235,
+      "chunk_preview": "3 Image Processing (a) Averaging filter of size 3 × 3 (b) Blurred version of lena Figure 3.8: Lena after mean filtering (a) Gaussian filter kernel of size 3 × 3 (b) Gaussian filter of size 15x15 and σ = 1 applied. (c) Ga"
+    },
+    {
+      "rank": 20,
+      "chunk_id": "mis1to66_chunk_0012",
+      "vector_score": 0.021912831813097,
+      "concepts": [
+        "concept::medical_imaging",
+        "method::convolution",
+        "modality::ct",
+        "signal::signal"
+      ],
+      "source_name": "MIS1to66.pdf",
+      "page_start": 23,
+      "page_end": 23,
+      "char_count": 1877,
+      "token_estimate": 469,
+      "chunk_preview": "2.2 Convolution and Correlation Description Equation Linearity g(t) ∗(a · f(t) + b · h(t)) = a((g ∗f)(t)) + b((g ∗h)(t)) Shift-invariance g(t) ∗f(t −τ) = (g ∗f)(t −τ) Commutativity g(t) ∗f(t) = f(t) ∗g(t) Associativity g"
+    }
+  ],
+  "concept_path": [
+    {
+      "step": 1,
+      "concept_id": "concept::medical_imaging",
+      "concept_name": "Medical Imaging",
+      "concept_type": "concept",
+      "score": 120.30570623448247,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 40,
+        "page_end_max": 64
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0029",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 40,
+      "recommended_end_page": 40,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0029",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 40,
+          "page_end": 40,
+          "chunk_preview": "2 System Theory 1.0 0.5 0.0 0.5 1.0 1.5 2.0 2.5 Input signal f(t) High-passed g2(t) Low-passed g1(t) Figure 2.11: Sine signal with additive noise after processing with a low-pass filter and a high-pass filter. example, w"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0053",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 64,
+          "page_end": 64,
+          "chunk_preview": "4.3 Assistance Systems Figure 4.2: Illustrations of a cholecystectomy. The left image shows an open surgery with direct access and the right image shows a minimally invasive approach with endoscopic tools (Courtesy of Pr"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0035",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 46,
+          "page_end": 46,
+          "chunk_preview": "3 Image Processing (a) First derivative in x-direction (b) First derivative in y-direction (c) Second derivative in x-direction Figure 3.5: Derivatives of an image. The image intensities are normalized for better visuali"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "concept_id": "modality::ct",
+      "concept_name": "CT",
+      "concept_type": "modality",
+      "score": 113.3986704167292,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 40,
+        "page_end_max": 64
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0029",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 40,
+      "recommended_end_page": 40,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0029",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 40,
+          "page_end": 40,
+          "chunk_preview": "2 System Theory 1.0 0.5 0.0 0.5 1.0 1.5 2.0 2.5 Input signal f(t) High-passed g2(t) Low-passed g1(t) Figure 2.11: Sine signal with additive noise after processing with a low-pass filter and a high-pass filter. example, w"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0053",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 64,
+          "page_end": 64,
+          "chunk_preview": "4.3 Assistance Systems Figure 4.2: Illustrations of a cholecystectomy. The left image shows an open surgery with direct access and the right image shows a minimally invasive approach with endoscopic tools (Courtesy of Pr"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0035",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 46,
+          "page_end": 46,
+          "chunk_preview": "3 Image Processing (a) First derivative in x-direction (b) First derivative in y-direction (c) Second derivative in x-direction Figure 3.5: Derivatives of an image. The image intensities are normalized for better visuali"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "concept_id": "modality::x_ray",
+      "concept_name": "X-Ray",
+      "concept_type": "modality",
+      "score": 8.507544649549352,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 13,
+        "page_end_max": 16
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0005",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 16,
+      "recommended_end_page": 16,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0005",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 16,
+          "page_end": 16,
+          "chunk_preview": "1 Introduction Figure 1.6: A typical ultrasound system as it can be found in clinics world-wide. Image courtesy of Siemens Healthineers AG. sion tomography enables us to see anomalies in sugar consumption within the body"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0003",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "chunk_preview": "1 Introduction Figure 1.1: MRI is based on nuclear magnetic resonance which does not involve ionizing radiation. For this reason MRI is often used in pediatric applications. Image courtesy of Siemens Healthineers AG. Fig"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0004",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 15,
+          "page_end": 15,
+          "chunk_preview": "1 Introduction a b c Figure 1.4: An X-ray dark-field setup can be used to reconstruct the ori-entation of fibers that are smaller than the detector resolution. The image on the left shows the reconstructed fiber orientat"
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "concept_id": "modality::computed_tomography",
+      "concept_name": "Computed Tomography",
+      "concept_type": "modality",
+      "score": 4.2676378813425835,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 13,
+        "page_end_max": 16
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0005",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 16,
+      "recommended_end_page": 16,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0005",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 16,
+          "page_end": 16,
+          "chunk_preview": "1 Introduction Figure 1.6: A typical ultrasound system as it can be found in clinics world-wide. Image courtesy of Siemens Healthineers AG. sion tomography enables us to see anomalies in sugar consumption within the body"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0003",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "chunk_preview": "1 Introduction Figure 1.1: MRI is based on nuclear magnetic resonance which does not involve ionizing radiation. For this reason MRI is often used in pediatric applications. Image courtesy of Siemens Healthineers AG. Fig"
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "concept_id": "modality::mri",
+      "concept_name": "MRI",
+      "concept_type": "modality",
+      "score": 4.239906768206769,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 12,
+        "page_end_max": 14
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0003",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 13,
+      "recommended_end_page": 14,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0003",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "chunk_preview": "1 Introduction Figure 1.1: MRI is based on nuclear magnetic resonance which does not involve ionizing radiation. For this reason MRI is often used in pediatric applications. Image courtesy of Siemens Healthineers AG. Fig"
+        },
+        {
+          "chunk_id": "mis1to66_chunk_0002",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 12,
+          "page_end": 12,
+          "chunk_preview": "1 Introduction Geek Box 1.1: Geek Boxes We designed the manuscript to be readable from the first semester on. However, we felt that we need to demonstrate that there is much more depth that we could go into. In order not"
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "concept_id": "modality::oct",
+      "concept_name": "OCT",
+      "concept_type": "modality",
+      "score": 2.147684497239199,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 16,
+        "page_end_max": 16
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0005",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 16,
+      "recommended_end_page": 16,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0005",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 16,
+          "page_end": 16,
+          "chunk_preview": "1 Introduction Figure 1.6: A typical ultrasound system as it can be found in clinics world-wide. Image courtesy of Siemens Healthineers AG. sion tomography enables us to see anomalies in sugar consumption within the body"
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "concept_id": "modality::ultrasound",
+      "concept_name": "Ultrasound",
+      "concept_type": "modality",
+      "score": 2.147684497239199,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 16,
+        "page_end_max": 16
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0005",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 16,
+      "recommended_end_page": 16,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0005",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 16,
+          "page_end": 16,
+          "chunk_preview": "1 Introduction Figure 1.6: A typical ultrasound system as it can be found in clinics world-wide. Image courtesy of Siemens Healthineers AG. sion tomography enables us to see anomalies in sugar consumption within the body"
+        }
+      ]
+    },
+    {
+      "step": 8,
+      "concept_id": "modality::magnetic_resonance_imaging",
+      "concept_name": "Magnetic Resonance Imaging",
+      "concept_type": "modality",
+      "score": 2.1199533841033844,
+      "prerequisites": [],
+      "concept_page_span": {
+        "page_start_min": 12,
+        "page_end_max": 12
+      },
+      "recommended_chunk_id": "mis1to66_chunk_0002",
+      "recommended_source_name": "MIS1to66.pdf",
+      "recommended_start_page": 12,
+      "recommended_end_page": 12,
+      "support_chunks": [
+        {
+          "chunk_id": "mis1to66_chunk_0002",
+          "source_name": "MIS1to66.pdf",
+          "page_start": 12,
+          "page_end": 12,
+          "chunk_preview": "1 Introduction Geek Box 1.1: Geek Boxes We designed the manuscript to be readable from the first semester on. However, we felt that we need to demonstrate that there is much more depth that we could go into. In order not"
+        }
+      ]
+    }
+  ]
+}

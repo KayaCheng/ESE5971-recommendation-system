@@ -1,0 +1,175 @@
+{
+  "created_at": "2026-03-25T17:21:58+00:00",
+  "mode": "proxy_concept_match",
+  "top_k": 5,
+  "seed_top_k": 20,
+  "weights": {
+    "alpha_vector": 0.7,
+    "beta_graph": 0.3,
+    "relation_decay": 0.35
+  },
+  "embedding_backend": "hash",
+  "embedding_model": "hash-v1",
+  "index_embedding_model": "hash-v1",
+  "index_embedding_dim": 384,
+  "num_queries": 5,
+  "aggregate": {
+    "vector_only": {
+      "MRR": 0.7,
+      "Recall": 0.10544081455387733,
+      "nDCG": 0.48992989688403715
+    },
+    "hybrid_light_graph": {
+      "MRR": 0.7,
+      "Recall": 0.10978864064083385,
+      "nDCG": 0.5161709123865055
+    },
+    "delta_hybrid_minus_vector": {
+      "MRR": 0.0,
+      "Recall": 0.004347826086956524,
+      "nDCG": 0.026241015502468323
+    }
+  },
+  "queries": [
+    {
+      "query": "How does CT differ from MRI?",
+      "relevant_count": 53,
+      "vector_only_top_k": [
+        "mis1to66_chunk_0029",
+        "mis1to66_chunk_0053",
+        "mis1to66_chunk_0035",
+        "mis1to66_chunk_0033",
+        "mis1to66_chunk_0022"
+      ],
+      "hybrid_light_graph_top_k": [
+        "mis1to66_chunk_0029",
+        "mis1to66_chunk_0053",
+        "mis1to66_chunk_0035",
+        "mis1to66_chunk_0033",
+        "mis1to66_chunk_0022"
+      ],
+      "vector_only_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.09433962264150944,
+        "nDCG": 1.0
+      },
+      "hybrid_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.09433962264150944,
+        "nDCG": 1.0
+      }
+    },
+    {
+      "query": "What is Fourier transform used for in imaging?",
+      "relevant_count": 17,
+      "vector_only_top_k": [
+        "mis1to66_chunk_0035",
+        "mis1to66_chunk_0025",
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0017",
+        "mis1to66_chunk_0007"
+      ],
+      "hybrid_light_graph_top_k": [
+        "mis1to66_chunk_0035",
+        "mis1to66_chunk_0025",
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0017",
+        "mis1to66_chunk_0007"
+      ],
+      "vector_only_metrics": {
+        "MRR": 0.5,
+        "Recall": 0.11764705882352941,
+        "nDCG": 0.36005461457723403
+      },
+      "hybrid_metrics": {
+        "MRR": 0.5,
+        "Recall": 0.11764705882352941,
+        "nDCG": 0.36005461457723403
+      }
+    },
+    {
+      "query": "How does ultrasound imaging work?",
+      "relevant_count": 1,
+      "vector_only_top_k": [
+        "mis1to66_chunk_0054",
+        "mis1to66_chunk_0045",
+        "mis1to66_chunk_0014",
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0055"
+      ],
+      "hybrid_light_graph_top_k": [
+        "mis1to66_chunk_0054",
+        "mis1to66_chunk_0045",
+        "mis1to66_chunk_0014",
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0055"
+      ],
+      "vector_only_metrics": {
+        "MRR": 0.0,
+        "Recall": 0.0,
+        "nDCG": 0.0
+      },
+      "hybrid_metrics": {
+        "MRR": 0.0,
+        "Recall": 0.0,
+        "nDCG": 0.0
+      }
+    },
+    {
+      "query": "What are benefits of X-ray imaging?",
+      "relevant_count": 4,
+      "vector_only_top_k": [
+        "mis1to66_chunk_0005",
+        "mis1to66_chunk_0038",
+        "mis1to66_chunk_0014",
+        "mis1to66_chunk_0042",
+        "mis1to66_chunk_0037"
+      ],
+      "hybrid_light_graph_top_k": [
+        "mis1to66_chunk_0005",
+        "mis1to66_chunk_0038",
+        "mis1to66_chunk_0014",
+        "mis1to66_chunk_0042",
+        "mis1to66_chunk_0035"
+      ],
+      "vector_only_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.25,
+        "nDCG": 0.3903800499921017
+      },
+      "hybrid_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.25,
+        "nDCG": 0.3903800499921017
+      }
+    },
+    {
+      "query": "Explain convolution in image processing",
+      "relevant_count": 46,
+      "vector_only_top_k": [
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0038",
+        "mis1to66_chunk_0011",
+        "mis1to66_chunk_0042",
+        "mis1to66_chunk_0008"
+      ],
+      "hybrid_light_graph_top_k": [
+        "mis1to66_chunk_0004",
+        "mis1to66_chunk_0038",
+        "mis1to66_chunk_0011",
+        "mis1to66_chunk_0003",
+        "mis1to66_chunk_0042"
+      ],
+      "vector_only_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.06521739130434782,
+        "nDCG": 0.6992148198508501
+      },
+      "hybrid_metrics": {
+        "MRR": 1.0,
+        "Recall": 0.08695652173913043,
+        "nDCG": 0.830419897363192
+      }
+    }
+  ]
+}

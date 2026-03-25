@@ -5,7 +5,7 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 
 import numpy as np
 
@@ -13,12 +13,24 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.retrieval_pipeline.common import read_jsonl
+
 
 def l2_normalize(vec: np.ndarray) -> np.ndarray:
     norm = float(np.linalg.norm(vec))
     if norm == 0.0:
         return vec
     return vec / norm
+
+
+def minmax_norm(values: Dict[str, float]) -> Dict[str, float]:
+    if not values:
+        return {}
+    lo = min(values.values())
+    hi = max(values.values())
+    if hi <= lo:
+        return {k: 0.0 for k in values}
+    return {k: (v - lo) / (hi - lo) for k, v in values.items()}
 
 
 class HashEmbedder:
@@ -77,11 +89,13 @@ class OpenAIEmbedder:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Hybrid retrieval: vector recall + graph expansion.")
+    parser = argparse.ArgumentParser(description="Hybrid retrieval with 2 modes: annotate | rerank_lightgraph.")
     parser.add_argument("--query", required=True, help="User query text.")
     parser.add_argument("--vector-dir", type=Path, default=Path("storage/vector"))
+    parser.add_argument("--graph-dir", type=Path, default=Path("storage/graph"))
     parser.add_argument("--metadata-db", type=Path, default=None, help="Defaults to <vector-dir>/metadata.sqlite")
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument("--mode", choices=["annotate", "rerank_lightgraph"], default="annotate")
 
     parser.add_argument(
         "--embedding-backend",
@@ -95,8 +109,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--neo4j-user", default=os.getenv("NEO4J_USER", "neo4j"))
     parser.add_argument("--neo4j-password", default=os.getenv("NEO4J_PASSWORD"))
     parser.add_argument("--neo4j-database", default=os.getenv("NEO4J_DATABASE", "neo4j"))
-    parser.add_argument("--no-graph", action="store_true", help="Skip Neo4j expansion and return vector-only results.")
+    parser.add_argument("--no-graph", action="store_true", help="Skip graph stage and return vector-only results.")
     parser.add_argument("--max-graph-edges", type=int, default=8)
+
+    parser.add_argument("--seed-top-k", type=int, default=20)
+    parser.add_argument("--alpha", type=float, default=0.7, help="Weight for vector score in rerank_lightgraph.")
+    parser.add_argument("--beta", type=float, default=0.3, help="Weight for graph score in rerank_lightgraph.")
+    parser.add_argument("--relation-decay", type=float, default=0.35)
+    parser.add_argument("--concept-boost-limit", type=int, default=16)
+    parser.add_argument("--max-chunks-per-concept", type=int, default=40)
 
     parser.add_argument("--output-json", type=Path, default=None)
     return parser.parse_args()
@@ -112,7 +133,7 @@ def get_embedder(args: argparse.Namespace):
     raise ValueError(f"Unsupported embedding backend: {args.embedding_backend}")
 
 
-def load_vector_artifacts(vector_dir: Path) -> tuple[np.ndarray, List[str], Dict[str, Any]]:
+def load_vector_artifacts(vector_dir: Path) -> Tuple[np.ndarray, List[str], Dict[str, Any]]:
     index_path = vector_dir / "index.npy"
     id_map_path = vector_dir / "id_map.json"
     manifest_path = vector_dir / "manifest.json"
@@ -133,32 +154,22 @@ def load_vector_artifacts(vector_dir: Path) -> tuple[np.ndarray, List[str], Dict
     return matrix.astype(np.float32), [str(x) for x in id_map], manifest
 
 
-def vector_search(matrix: np.ndarray, id_map: List[str], query_vec: np.ndarray, top_k: int) -> List[Dict[str, Any]]:
+def vector_scores(matrix: np.ndarray, query_vec: np.ndarray) -> np.ndarray:
     if matrix.size == 0:
-        return []
-
+        return np.asarray([], dtype=np.float32)
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     norms[norms == 0.0] = 1.0
     matrix_n = matrix / norms
-
     q = l2_normalize(query_vec.astype(np.float32))
-    scores = matrix_n @ q
+    return matrix_n @ q
 
-    k = min(top_k, len(id_map))
+
+def top_k_indices(scores: np.ndarray, k: int) -> np.ndarray:
+    if scores.size == 0:
+        return np.asarray([], dtype=np.int64)
+    k = min(k, scores.shape[0])
     idx = np.argpartition(-scores, kth=k - 1)[:k]
-    idx = idx[np.argsort(-scores[idx])]
-
-    results = []
-    for rank, i in enumerate(idx, start=1):
-        results.append(
-            {
-                "rank": rank,
-                "vector_row_index": int(i),
-                "chunk_id": id_map[i],
-                "score": float(scores[i]),
-            }
-        )
-    return results
+    return idx[np.argsort(-scores[idx])]
 
 
 def fetch_chunk_metadata(db_path: Path, chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
@@ -225,7 +236,7 @@ def fetch_graph_context_for_chunk(session, chunk_id: str, max_edges: int) -> Dic
     return {"mentions": mentions, "related": related}
 
 
-def maybe_enrich_with_graph(args: argparse.Namespace, rows: List[Dict[str, Any]]) -> None:
+def maybe_enrich_with_neo4j(args: argparse.Namespace, rows: List[Dict[str, Any]]) -> None:
     if args.no_graph:
         return
     if not args.neo4j_password:
@@ -242,9 +253,182 @@ def maybe_enrich_with_graph(args: argparse.Namespace, rows: List[Dict[str, Any]]
         driver.close()
 
 
+def load_chunk_concepts(metadata_db: Path, graph_dir: Path) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
+    chunk_to_concepts: Dict[str, List[str]] = {}
+    concept_to_chunks: Dict[str, List[str]] = {}
+
+    conn = sqlite3.connect(metadata_db)
+    try:
+        table_exists = conn.execute(
+            """
+            SELECT count(*) FROM sqlite_master
+            WHERE type='table' AND name='chunk_concept_map'
+            """
+        ).fetchone()[0]
+        if table_exists:
+            rows = conn.execute("SELECT chunk_id, concept_id FROM chunk_concept_map").fetchall()
+            for chunk_id, concept_id in rows:
+                chid = str(chunk_id)
+                cid = str(concept_id)
+                chunk_to_concepts.setdefault(chid, []).append(cid)
+                concept_to_chunks.setdefault(cid, []).append(chid)
+    finally:
+        conn.close()
+
+    if chunk_to_concepts:
+        return chunk_to_concepts, concept_to_chunks
+
+    concepts_path = graph_dir / "concepts.jsonl"
+    if not concepts_path.exists():
+        raise FileNotFoundError(f"Missing chunk_concept_map table and fallback concepts file: {concepts_path}")
+    for rec in read_jsonl(concepts_path):
+        cid = str(rec.get("concept_id", ""))
+        if not cid:
+            continue
+        for chunk_id in rec.get("mention_chunk_ids", []):
+            chid = str(chunk_id)
+            chunk_to_concepts.setdefault(chid, []).append(cid)
+            concept_to_chunks.setdefault(cid, []).append(chid)
+    return chunk_to_concepts, concept_to_chunks
+
+
+def load_relations(graph_dir: Path) -> Dict[str, List[Tuple[str, float]]]:
+    relations_path = graph_dir / "relations.jsonl"
+    if not relations_path.exists():
+        return {}
+    adj: Dict[str, List[Tuple[str, float]]] = {}
+    for r in read_jsonl(relations_path):
+        src = str(r.get("source_concept_id", ""))
+        tgt = str(r.get("target_concept_id", ""))
+        if not src or not tgt:
+            continue
+        conf = float(r.get("confidence", 0.0))
+        adj.setdefault(src, []).append((tgt, conf))
+        adj.setdefault(tgt, []).append((src, conf))
+    return adj
+
+
+def build_graph_scores(
+    seed_ids: List[str],
+    seed_scores: Dict[str, float],
+    chunk_to_concepts: Dict[str, List[str]],
+    concept_to_chunks: Dict[str, List[str]],
+    relations: Dict[str, List[Tuple[str, float]]],
+    relation_decay: float,
+    concept_boost_limit: int,
+    max_chunks_per_concept: int,
+) -> Tuple[Dict[str, float], List[str]]:
+    concept_scores: Dict[str, float] = {}
+    for chunk_id in seed_ids:
+        w = max(0.0, seed_scores.get(chunk_id, 0.0))
+        for cid in chunk_to_concepts.get(chunk_id, []):
+            concept_scores[cid] = concept_scores.get(cid, 0.0) + w
+
+    propagated = dict(concept_scores)
+    for src, src_score in concept_scores.items():
+        for tgt, conf in relations.get(src, []):
+            propagated[tgt] = propagated.get(tgt, 0.0) + src_score * max(0.0, conf) * relation_decay
+
+    top_concepts = sorted(propagated.items(), key=lambda x: x[1], reverse=True)[:concept_boost_limit]
+    candidate_chunks = set(seed_ids)
+    for cid, _ in top_concepts:
+        for chunk_id in concept_to_chunks.get(cid, [])[:max_chunks_per_concept]:
+            candidate_chunks.add(chunk_id)
+
+    chunk_graph_score: Dict[str, float] = {}
+    for chunk_id in candidate_chunks:
+        score = 0.0
+        for cid in chunk_to_concepts.get(chunk_id, []):
+            score += propagated.get(cid, 0.0)
+        chunk_graph_score[chunk_id] = score
+    return chunk_graph_score, sorted(candidate_chunks)
+
+
+def build_annotate_results(
+    args: argparse.Namespace,
+    id_map: List[str],
+    scores: np.ndarray,
+    metadata_db: Path,
+) -> List[Dict[str, Any]]:
+    idx = top_k_indices(scores, args.top_k)
+    rows = [
+        {
+            "rank": rank,
+            "vector_row_index": int(i),
+            "chunk_id": id_map[int(i)],
+            "score": float(scores[int(i)]),
+            "vector_score": float(scores[int(i)]),
+        }
+        for rank, i in enumerate(idx, start=1)
+    ]
+
+    chunk_meta = fetch_chunk_metadata(metadata_db, [x["chunk_id"] for x in rows])
+    out: List[Dict[str, Any]] = []
+    for item in rows:
+        row = {**item, **chunk_meta.get(item["chunk_id"], {})}
+        out.append(row)
+    return out
+
+
+def build_lightgraph_results(
+    args: argparse.Namespace,
+    id_map: List[str],
+    scores: np.ndarray,
+    metadata_db: Path,
+    chunk_to_concepts: Dict[str, List[str]],
+    concept_to_chunks: Dict[str, List[str]],
+    relations: Dict[str, List[Tuple[str, float]]],
+) -> List[Dict[str, Any]]:
+    id_to_row = {cid: idx for idx, cid in enumerate(id_map)}
+    seed_idx = top_k_indices(scores, args.seed_top_k)
+    seed_ids = [id_map[int(i)] for i in seed_idx]
+
+    if args.no_graph:
+        ranked_ids = seed_ids[: args.top_k]
+        graph_norm = {cid: 0.0 for cid in ranked_ids}
+        final_norm = {cid: float(scores[id_to_row[cid]]) for cid in ranked_ids if cid in id_to_row}
+    else:
+        seed_scores = {id_map[int(i)]: float(scores[int(i)]) for i in seed_idx}
+        graph_scores, candidates = build_graph_scores(
+            seed_ids=seed_ids,
+            seed_scores=seed_scores,
+            chunk_to_concepts=chunk_to_concepts,
+            concept_to_chunks=concept_to_chunks,
+            relations=relations,
+            relation_decay=args.relation_decay,
+            concept_boost_limit=args.concept_boost_limit,
+            max_chunks_per_concept=args.max_chunks_per_concept,
+        )
+
+        vector_raw = {cid: float(scores[id_to_row[cid]]) for cid in candidates if cid in id_to_row}
+        v_norm = minmax_norm(vector_raw)
+        g_norm = minmax_norm(graph_scores)
+        combined = {cid: args.alpha * v_norm.get(cid, 0.0) + args.beta * g_norm.get(cid, 0.0) for cid in vector_raw}
+        ranked_ids = [cid for cid, _ in sorted(combined.items(), key=lambda x: x[1], reverse=True)[: args.top_k]]
+        graph_norm = g_norm
+        final_norm = combined
+
+    chunk_meta = fetch_chunk_metadata(metadata_db, ranked_ids)
+    results: List[Dict[str, Any]] = []
+    for rank, cid in enumerate(ranked_ids, start=1):
+        vec_score = float(scores[id_to_row[cid]]) if cid in id_to_row else 0.0
+        row_idx = int(id_to_row[cid]) if cid in id_to_row else -1
+        row = {
+            "rank": rank,
+            "vector_row_index": row_idx,
+            "chunk_id": cid,
+            "score": float(final_norm.get(cid, vec_score)),
+            "final_score": float(final_norm.get(cid, vec_score)),
+            "vector_score": vec_score,
+            "graph_score": float(graph_norm.get(cid, 0.0)),
+        }
+        row.update(chunk_meta.get(cid, {}))
+        results.append(row)
+    return results
+
+
 def run() -> None:
     args = parse_args()
-
     matrix, id_map, manifest = load_vector_artifacts(args.vector_dir)
 
     metadata_db = args.metadata_db or (args.vector_dir / "metadata.sqlite")
@@ -260,19 +444,27 @@ def run() -> None:
             "Use matching --embedding-model and --embedding-dim for this vector index."
         )
 
-    base = vector_search(matrix, id_map, qvec, args.top_k)
-    chunk_meta = fetch_chunk_metadata(metadata_db, [x["chunk_id"] for x in base])
+    scores = vector_scores(matrix, qvec)
 
-    results: List[Dict[str, Any]] = []
-    for item in base:
-        chunk_id = item["chunk_id"]
-        row = {**item, **chunk_meta.get(chunk_id, {})}
-        results.append(row)
-
-    maybe_enrich_with_graph(args, results)
+    if args.mode == "annotate":
+        results = build_annotate_results(args=args, id_map=id_map, scores=scores, metadata_db=metadata_db)
+        maybe_enrich_with_neo4j(args, results)
+    else:
+        chunk_to_concepts, concept_to_chunks = load_chunk_concepts(metadata_db=metadata_db, graph_dir=args.graph_dir)
+        relations = {} if args.no_graph else load_relations(args.graph_dir)
+        results = build_lightgraph_results(
+            args=args,
+            id_map=id_map,
+            scores=scores,
+            metadata_db=metadata_db,
+            chunk_to_concepts=chunk_to_concepts,
+            concept_to_chunks=concept_to_chunks,
+            relations=relations,
+        )
 
     payload = {
         "query": args.query,
+        "mode": args.mode,
         "top_k": args.top_k,
         "vector_index": str(args.vector_dir / "index.npy"),
         "embedding_backend": args.embedding_backend,
@@ -282,6 +474,17 @@ def run() -> None:
         "graph_enabled": not args.no_graph,
         "results": results,
     }
+
+    if args.mode == "rerank_lightgraph":
+        payload["light_graph_config"] = {
+            "graph_dir": str(args.graph_dir),
+            "seed_top_k": args.seed_top_k,
+            "alpha": args.alpha,
+            "beta": args.beta,
+            "relation_decay": args.relation_decay,
+            "concept_boost_limit": args.concept_boost_limit,
+            "max_chunks_per_concept": args.max_chunks_per_concept,
+        }
 
     if args.output_json:
         args.output_json.parent.mkdir(parents=True, exist_ok=True)
