@@ -209,7 +209,7 @@ python3 scripts/hybrid_retrieve.py \
   - `openai` for API embeddings.
 - Hybrid retrieval requires embedding settings that match the built index.
 
-## 6.5) Quick Lite-Graph Validation (No Docker / No Neo4j)
+<!-- ## 6.5) Quick Lite-Graph Validation (No Docker / No Neo4j)
 
 If you are short on time and only want to quickly test whether **graph+vector** can beat **vector-only**, use this local A/B path.
 
@@ -260,8 +260,8 @@ python3 scripts/lightgraph_ab_test.py \
     "relevant_chunk_ids": ["mis_001_c003", "mis_001_c019"]
   }
 ]
-```
-
+``` -->
+<!--
 ### Output
 
 - `storage/retrieval/lightgraph_ab_report.json`
@@ -271,9 +271,9 @@ python3 scripts/lightgraph_ab_test.py \
   - `nDCG`
   - `delta_hybrid_minus_vector`
 
-When `--qrels-json` is not provided, the script runs in `proxy_concept_match` mode (weak supervision). Treat this as a **fast directional check**, not final evidence.
+When `--qrels-json` is not provided, the script runs in `proxy_concept_match` mode (weak supervision). Treat this as a **fast directional check**, not final evidence. -->
 
-## 6.7) Concept Learning Path (Before Online Bandit)
+## 6.5) Concept Learning Path (Before Online Bandit)
 
 Use this step when you want to output a **concept sequence** instead of only chunk ranking.
 
@@ -284,6 +284,8 @@ Pipeline used by the script:
 - concept graph expansion (from `relations.jsonl`)
 - dependency-aware ordering (`depends_on` / `part_of` / `is_a`)
 - final concept path + support chunks
+
+### With Hash Backend (Fast Prototyping)
 
 ```bash
 python3 scripts/generate_concept_path.py \
@@ -304,6 +306,65 @@ Output:
 - fields:
   - `concept_path`: ordered learning concepts
   - `seed_chunks`: supporting retrieval evidence
+- Note: `vector_score` typically ~0.10-0.15 (pseudo-random, for testing only)
+
+### With Semantic Model (Baseline for Comparison)
+
+For production-quality results, rebuild vector storage with semantic embedding:
+
+```bash
+# Step A: Rebuild vector index with sentence-transformers
+python3 scripts/build_vector_store.py \
+  --chunks-path data/processed/chunks/mis1to66_chunks.jsonl \
+  --output-dir storage/vector_semantic \
+  --embedding-backend sentence_transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-dim 384
+```
+
+Output:
+
+- `storage/vector_semantic/index.npy`
+- `storage/vector_semantic/manifest.json`
+- `storage/vector_semantic/metadata.sqlite`
+
+```bash
+# Step B: Bind semantic vectors to graph
+python3 scripts/link_vector_graph.py \
+  --vector-dir storage/vector_semantic \
+  --graph-dir storage/graph \
+  --index-name mis1to66_vector_semantic \
+  --skip-neo4j
+```
+
+```bash
+# Step C: Generate semantic concept path (baseline)
+python3 scripts/generate_concept_path.py \
+  --query "How does CT differ from MRI?" \
+  --vector-dir storage/vector_semantic \
+  --graph-dir storage/graph \
+  --embedding-backend sentence_transformers \
+  --embedding-model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding-dim 384 \
+  --seed-top-k 20 \
+  --max-concepts 8 \
+  --output-json storage/retrieval/concept_path_ct_mri_semantic.json
+```
+
+Output:
+
+- `storage/retrieval/concept_path_ct_mri_semantic.json`
+- `vector_score` typically 0.40-0.85 (meaningful semantic similarity)
+- Higher quality concept ranking and evidence chunks
+
+### Comparison: Hash vs Semantic
+
+| Metric | Hash | Semantic |
+|--------|------|----------|
+| **Vector Score Range** | 0.10-0.15 | 0.40-0.85 |
+| **Concept Quality** | Random | Semantically coherent |
+| **Use Case** | Testing only | Production baseline |
+| **Speed** | Fast (~1s) | Medium (~5-10 min) |
 
 ## 7) Online Bandit Training (Replay -> Train -> Evaluate)
 
